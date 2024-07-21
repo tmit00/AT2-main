@@ -1,54 +1,72 @@
+## MAP
+ 
 import random
-
+ 
 import pygame
 from assets import GAME_ASSETS
 from enemy import Enemy
+from character import Character
 
 
 class Map:
     def __init__(self, window):
         """
         Initialize the Map class.
-
+ 
         Args:
             window (pygame.Surface): The game window surface.
         """
         self.window = window
-        self.map_image = pygame.image.load(GAME_ASSETS["dungeon_map"]).convert_alpha()
-        self.map_image = pygame.transform.scale(self.map_image, (self.window.get_width(), self.window.get_height()))
+        self.map_image = pygame.image.load(GAME_ASSETS["background"]).convert_alpha()
+        self.map_image = pygame.transform.scale(self.map_image, (self.window.get_width(), 400))
+        self.panel_image = pygame.image.load(GAME_ASSETS["panel"]).convert_alpha()
+        self.panel_image = pygame.transform.scale(self.panel_image, (self.window.get_width(), 200))
+        self.animation_list = []
         self.player_images = {
-            'Warrior': pygame.image.load(GAME_ASSETS['warrior']).convert_alpha(),
-            'Mage': pygame.image.load(GAME_ASSETS['mage']).convert_alpha(),
-            'Rogue': pygame.image.load(GAME_ASSETS["rogue"]).convert_alpha()
+            'Warrior': [pygame.image.load(GAME_ASSETS[f'warrior_idle_{i}']).convert_alpha() for i in range(1,7)],
+            'Mage': [pygame.image.load(GAME_ASSETS[f'idle_wizard_{i}']).convert_alpha() for i in range(1, 7)],
+            'Rogue': [pygame.image.load(GAME_ASSETS[f"rogue_idle_{i}"]).convert_alpha() for i in range(1, 6)]
         }
         self.player_type = None
-        self.player_position = [self.window.get_width() / 2, self.window.get_height() / 2]
+        self.player_position = [0,0]
+        self.mage_player_position = [90, 88]
+        self.rogue_player_position = [90, 45]
+        self.warrior_player_position = [90, 45]
         self.enemies = [
-            Enemy(GAME_ASSETS["goblin"], [50, 50], self.window),
-            Enemy(GAME_ASSETS["orc"], [self.window.get_width() - 120, 50], self.window),
-            Enemy(GAME_ASSETS["skeleton"], [50, self.window.get_height() - 120], self.window),
-            Enemy(GAME_ASSETS["skeleton"], [self.window.get_width() - 120, self.window.get_height() - 120], self.window)
+            Enemy([GAME_ASSETS[f"skeleton_idle_{i}"] for i in range(1, 8)], [self.window.get_width() - 90, 80], self.window)
         ]
         self.in_combat = False  # Ensure this attribute is defined in the constructor
         self.current_enemy = None
         self.blue_orb = None
         self.game_over = False
-
+        self.paused = False
+        self.pause_menu = {
+            "Resume": pygame.image.load(GAME_ASSETS['button_resume']).convert_alpha(),
+            "Quit": pygame.image.load(GAME_ASSETS['button_quit']).convert_alpha()
+        }
+        self.pause_menu_rects = self.create_pause_menu_rects()
+        self.animation_index = 0
+        self.animation_counter = 0
+        self.animation_speed = 80
+ 
     def load_player(self, character_type):
         """
         Load the player character.
-
+ 
         Args:
             character_type (str): The type of character to load.
         """
         self.player_type = character_type
-        self.player_image = self.player_images[character_type]
-        self.player_image = pygame.transform.scale(self.player_image, (int(self.player_image.get_width() * 0.15), int(self.player_image.get_height() * 0.15)))
-
+        self.player_images[character_type] = [pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
+                                              for img, scale in zip(self.player_images[character_type], [1.75] * len(self.player_images['Mage']) if character_type == "Mage" else
+                                                                     [3] * len(self.player_images['Warrior']) if character_type == "Warrior" else
+                                                                     [3] * len(self.player_images['Rogue']) if character_type == "Rogue" else [1])]
+   
+ 
     def check_for_combat(self):
         """
         Check if the player is in combat with any enemy.
-
+ 
         Returns:
             bool: True if the player is in combat, False otherwise.
         """
@@ -58,7 +76,7 @@ class Map:
                 self.current_enemy = enemy
                 return True
         return False
-
+ 
     def handle_combat(self):
         """
         Handle combat between the player and the current enemy.
@@ -79,7 +97,7 @@ class Map:
                 print(f"Enemy attacks back! Deals {enemy_damage} damage to the player.")
                 # Assume player has a method to take damage
                 # self.player.take_damage(enemy_damage)
-
+ 
     def spawn_blue_orb(self):
         """
         Spawn the blue orb in the center of the map.
@@ -87,11 +105,11 @@ class Map:
         self.blue_orb = pygame.image.load(GAME_ASSETS["blue_orb"]).convert_alpha()
         self.blue_orb = pygame.transform.scale(self.blue_orb, (50, 50))
         self.orb_position = [self.window.get_width() / 2 - 25, self.window.get_height() / 2 - 25]
-
+ 
     def check_orb_collision(self):
         """
         Check if the player has collided with the blue orb.
-
+ 
         Returns:
             bool: True if the player has collided with the blue orb, False otherwise.
         """
@@ -100,45 +118,96 @@ class Map:
             print("YOU WIN")  # This can be modified to a more visual display if needed.
             return True
         return False
-
+ 
+    def handle_pause(self):
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.paused = False
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.pause_menu_rects["Resume"].collidepoint(event.pos):
+                    self.paused = False
+                elif self.pause_menu_rects["Quit"].collidepoint(event.pos):
+                    return "quit"
+        return None
+           
+ 
     def handle_events(self):
         """
         Handle user input events.
-        
+       
         Returns:
             str: 'quit' if the game is over and should be exited, None otherwise.
         """
+        if self.paused:
+            if self.handle_pause() == "quit":
+                return "quit"
+            return None
+       
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return 'quit'
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.paused = not self.paused
+       
         if self.game_over:
             return 'quit'  # Stop processing events if game is over
-
-        keys = pygame.key.get_pressed()
-        move_speed = 2
-        if keys[pygame.K_LEFT]:
-            self.player_position[0] -= move_speed
-        if keys[pygame.K_RIGHT]:
-            self.player_position[0] += move_speed
-        if keys[pygame.K_UP]:
-            self.player_position[1] -= move_speed
-        if keys[pygame.K_DOWN]:
-            self.player_position[1] += move_speed
-
+ 
         if not self.in_combat:
             if self.check_for_combat():
                 return
         self.handle_combat()
-
+ 
         if self.blue_orb and self.check_orb_collision():
             return 'quit'
-
-    def draw(self):
+ 
+    def draw(self, selected_character):
         """
         Draw the game objects on the window.
         """
         self.window.fill((0, 0, 0))
         self.window.blit(self.map_image, (0, 0))
-        self.window.blit(self.player_image, (self.player_position[0], self.player_position[1]))
+        self.window.blit(self.panel_image, (0, 400))
+       
+        if selected_character == "Mage":
+            self.animation_counter += 1
+            if self.animation_counter >= self.animation_speed:
+                self.animation_counter = 0
+                self.animation_index = (self.animation_index + 1) % len(self.player_images["Mage"])
+            self.window.blit(self.player_images["Mage"][self.animation_index], (self.mage_player_position[0], self.mage_player_position[1]))
+        elif selected_character == "Warrior":
+            self.animation_counter += 1
+            if self.animation_counter >= self.animation_speed:
+                self.animation_counter = 0
+                self.animation_index = (self.animation_index + 1) % len(self.player_images["Warrior"])
+            self.window.blit(self.player_images["Warrior"][self.animation_index], (self.warrior_player_position[0], self.warrior_player_position[1]))
+        elif selected_character == "Rogue":
+            self.animation_counter += 1
+            if self.animation_counter >= self.animation_speed:
+                self.animation_counter = 0
+                self.animation_index = (self.animation_index + 1) % len(self.player_images["Rogue"])
+            self.window.blit(self.player_images["Rogue"][self.animation_index], (self.rogue_player_position[0], self.rogue_player_position[1]))
+       
+       
         for enemy in self.enemies:
             enemy.draw()
         if self.blue_orb:
             self.window.blit(self.blue_orb, self.orb_position)
+        if self.paused:
+            self.draw_pause_menu()
         pygame.display.flip()
+ 
+    def draw_pause_menu(self):
+        for key, button in self.pause_menu.items():
+            self.window.blit(button, self.pause_menu_rects[key].topleft)
+        pygame.display.flip()
+ 
+    def create_pause_menu_rects(self):
+        pause_menu_rects = {}
+        x = self.window.get_width() / 2
+        y = self.window.get_height() / 2
+        for key, button in self.pause_menu.items():
+            pause_menu_rects[key] = button.get_rect(center=(x,y))
+            y += 50
+        return pause_menu_rects
