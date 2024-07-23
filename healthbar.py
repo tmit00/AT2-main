@@ -3,7 +3,7 @@
 import pygame
  
 class HealthBar:
-    def __init__(self, window, x, y, width=100, height=10):
+    def __init__(self, window, x, y, label, width=120, height=30):
         """
         Initialize the HealthBar class.
  
@@ -17,8 +17,10 @@ class HealthBar:
         self.window = window
         self.x = x
         self.y = y
+        self.label = label
         self.width = width
         self.height = height
+        self.font = pygame.font.Font(None, 24)
  
     def draw(self, current_hp, max_hp):
         """
@@ -39,3 +41,8 @@ class HealthBar:
         pygame.draw.rect(self.window, (255, 0, 0), health_bar_background)
         # Draw the current health bar (in green)
         pygame.draw.rect(self.window, (0, 255, 0), current_health_bar)
+
+        health_text = f"{self.label} {current_hp}/{max_hp}"
+        text_surface = self.font.render(health_text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(midbottom=(self.x + self.width // 2, self.y - 5))
+        self.window.blit(text_surface, text_rect)

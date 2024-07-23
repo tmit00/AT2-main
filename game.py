@@ -13,7 +13,7 @@ class Game:
         pygame.init()
         load_assets()  # load the game image assets
         self.window = pygame.display.set_mode((1050, 600))
-        self.clock = pygame.time.Clock().tick(60)
+        self.clock = pygame.time.Clock()
         self.menu = MainMenu(self.window)  # Create an instance of the MainMenu class
         self.character_select = CharacterSelect(self.window)  # Create an instance of the CharacterSelect class
         self.settings = Settings(self.window)
@@ -43,14 +43,9 @@ class Game:
                     self.state = 'game_map'  # Change the state to 'game_map'
  
             elif self.state == 'game_map':  # If the state is 'game_map'
-                result = self.game_map.handle_events()  # Handle events in the game map and get the result
-                if result == 'back':  # If the result is 'back'
-                    self.state = 'character_select'  # Change the state to 'character_select'
-                elif result == 'quit':  # If the result is 'quit'
-                    pygame.quit()  # Quit pygame
-                    return  # Exit the run method
-                else:
-                    self.game_map.draw(selected_character)  # Draw the game map
+                self.game_map.handle_events()  # Handle events in the game map
+                self.game_map.update()  # Update game logic
+                self.game_map.draw(self.current_character)
  
             elif self.state == "settings":
                 settings = self.settings.run()
@@ -61,6 +56,8 @@ class Game:
                 if event.type == pygame.QUIT:  # If the event type is QUIT
                     pygame.quit()  # Quit pygame
                     return  # Exit the run method
+                
+            self.clock.tick(60)
  
 if __name__ == "__main__":
     game = Game()  # Create an instance of the Game class

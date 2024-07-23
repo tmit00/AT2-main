@@ -25,7 +25,7 @@ class Character:
         self.gold = 0  # Example starting value for character's gold
         self.attribute_points = 0  # Attribute points available to allocate
  
-        self.health_bar = HealthBar(window, x=10, y=10)
+        self.health_bar = HealthBar(window, x=220, y=self.window.get_height() - 150, label="Player HP:", width=100)
  
     def assign_attribute_points(self, attribute, points):
         # Ensure the attribute exists before assigning points
@@ -54,7 +54,7 @@ class Character:
         return int(100 * (1.5 ** (level - 1)))
  
     def is_alive(self):
-        return self.hit_points > 0
+        return self.alive
  
     def take_damage(self, amount):
         # Calculate the actual damage taken, taking into account the character's armor
