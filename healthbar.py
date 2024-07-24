@@ -22,7 +22,7 @@ class HealthBar:
         self.height = height
         self.font = pygame.font.Font(None, 24)
  
-    def draw(self, current_hp, max_hp):
+    def draw(self, current_hp, max_hp, type):
         """
         Draw the health bar on the screen.
  
@@ -37,10 +37,15 @@ class HealthBar:
         # Define the health bar rectangles
         health_bar_background = pygame.Rect(self.x, self.y, self.width, self.height)
         current_health_bar = pygame.Rect(self.x, self.y, current_health_bar_width, self.height)
-        # Draw the health bar background (in red)
-        pygame.draw.rect(self.window, (255, 0, 0), health_bar_background)
-        # Draw the current health bar (in green)
-        pygame.draw.rect(self.window, (0, 255, 0), current_health_bar)
+        if type == "Health":
+            # Draw the health bar background (in red)
+            pygame.draw.rect(self.window, (255, 0, 0), health_bar_background)
+            # Draw the current health bar (in green)
+            pygame.draw.rect(self.window, (0, 255, 0), current_health_bar)
+        elif type == "Stamina":
+            pygame.draw.rect(self.window, (255, 255, 255), health_bar_background)
+            pygame.draw.rect(self.window, (255, 255, 0), current_health_bar)
+
 
         health_text = f"{self.label} {current_hp}/{max_hp}"
         text_surface = self.font.render(health_text, True, (255, 255, 255))

@@ -87,4 +87,4 @@ class Enemy:
 
         # Draw the current frame of the enemy image
         self.window.blit(self.current_images[self.animation_index], adjusted_position)
-        self.health_bar.draw(self.health, self.max_health)
+        self.health_bar.draw(self.health, self.max_health, type="Health")
