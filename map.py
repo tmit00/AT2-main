@@ -294,6 +294,8 @@ class Map:
         """Progress to the next level."""
         # Load new enemy or update game state for the next level
         self.player.hit_points = 100
+        enemy_idle_images = []
+        enemy_attack_images = []
         if self.level == 2:
             self.player.character_hit += 5
             self.player.armor += 5
@@ -306,13 +308,55 @@ class Map:
             print("Player Progression Update:\n- NEW ATTACK UNLOCKED!\n- Damage increased by 5 for all attacks\n- Armour increased by 5")
             enemy_idle_images = [GAME_ASSETS[f"fire_idle_{i}"] for i in range(1, 7)]
             enemy_attack_images = [GAME_ASSETS[f"fire_attack_{i}"] for i in range(1, 12)]
+        elif self.level == 4:
+            self.player.character_hit += 5
+            self.player.armor += 5
+            print("Player Progression Update:\n- Damage increased by 5 for all attacks\n- Armour increased by 5")
+            enemy_idle_images = [GAME_ASSETS[f"barbarian_idle_{i}"] for i in range(1, 6)]
+            enemy_attack_images = [GAME_ASSETS[f"barbarian_attack_{i}"] for i in range(1, 6)]
+        elif self.level == 5:
+            self.player.character_hit += 5
+            self.player.armor += 5
+            print("Player Progression Update:\n- Damage increased by 5 for all attacks\n- Armour increased by 5")
+            enemy_idle_images = [GAME_ASSETS[f"goblin_mage_idle_{i}"] for i in range(1, 6)]
+            enemy_attack_images = [GAME_ASSETS[f"goblin_mage_attack_{i}"] for i in range(1, 7)]
+        elif self.level == 6:
+            self.player.character_hit += 2
+            print("Player Progression Update:\n- Damage increased by 2 for all attacks")
+            enemy_idle_images = [GAME_ASSETS[f"princess_idle_{i}"] for i in range(1, 9)]
+            enemy_attack_images = [GAME_ASSETS[f"princess_attack_{i}"] for i in range(1, 11)]
+        elif self.level == 7:
+            self.player.character_hit += 2
+            print("Player Progression Update:\n- Damage increased by 2 for all attacks")
+            enemy_idle_images = [GAME_ASSETS[f"raven_idle_{i}"] for i in range(1, 7)]
+            enemy_attack_images = [GAME_ASSETS[f"raven_attack_{i}"] for i in range(1, 7)]
+        elif self.level == 8:
+            self.player.character_hit += 2
+            print("Player Progression Update:\n- Damage increased by 2 for all attacks")
+            enemy_idle_images = [GAME_ASSETS[f"skeleton_warrior_idle_{i}"] for i in range(1, 8)]
+            enemy_attack_images = [GAME_ASSETS[f"skeleton_warrior_attack_{i}"] for i in range(1, 5)]
+        elif self.level == 9:
+            self.player.character_hit += 2
+            print("Player Progression Update:\n- Damage increased by 2 for all attacks")
+            enemy_idle_images = [GAME_ASSETS[f"goblin_warrior_idle_{i}"] for i in range(1, 6)]
+            enemy_attack_images = [GAME_ASSETS[f"goblin_warrior_attack_{i}"] for i in range(1, 5)]
+        elif self.level == 10:
+            self.player.character_hit += 2
+            print("Player Progression Update:\n- Damage increased by 2 for all attacks")
+            enemy_idle_images = [GAME_ASSETS[f"samurai_idle_{i}"] for i in range(1, 7)]
+            enemy_attack_images = [GAME_ASSETS[f"samurai_attack_{i}"] for i in range(1, 7)]
         else:
             enemy_idle_images = [GAME_ASSETS[f"skeleton_idle_{i}"] for i in range(1, 8)]
             enemy_attack_images = [GAME_ASSETS[f"skeleton_attack_{i}"] for i in range(1, 8)]
         
+        y_position = 80
+        if any(substring in str(enemy_idle_images[0]) for substring in ['barbarian', 'goblin']):
+            y_position += 65
+
         self.enemies = [
-            Enemy(enemy_idle_images, enemy_attack_images, [self.window.get_width() - 400, 80], self.window)
+            Enemy(enemy_idle_images, enemy_attack_images, [self.window.get_width() - 400, y_position], self.window)
         ]
+
         self.enemy_attack_animation = [pygame.image.load(image).convert_alpha() for image in enemy_attack_images]
         self.enemy_attack_animation = [pygame.transform.scale(img, (int(img.get_width() * 2), int(img.get_height() * 2))) for img in self.enemy_attack_animation]
         self.enemy_attack_animation = [pygame.transform.flip(img, True, False) for img in self.enemy_attack_animation]
